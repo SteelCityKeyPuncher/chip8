@@ -34,6 +34,10 @@ GLuint linkShader(GLuint vertexShader, GLuint fragmentShader);
 Chip8::Chip8() {
   // Copy the font to memory
   std::memcpy(&this->memory[0], kInternalFont.data(), kInternalFont.size());
+
+  // Seed the random number generator
+  // Ideally, the RNG from the STL would be better here
+  srand(time(nullptr));
 }
 
 Chip8::~Chip8() {
@@ -136,7 +140,7 @@ void Chip8::InitializeGraphics() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 64, 32, 0, GL_RGB, GL_UNSIGNED_BYTE,
-               this->pixels.data());
+               this->pixelBuffer.data());
 }
 
 void Chip8::LoadRom(const std::string &romPath) {
@@ -195,7 +199,7 @@ void Chip8::Update(GLFWwindow *window, float deltaTime) {
 
 void Chip8::Draw() {
   glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 64, 32, GL_RGB, GL_UNSIGNED_BYTE,
-                  this->pixels.data());
+                  this->pixelBuffer.data());
 
   glUseProgram(this->shader);
 
@@ -207,6 +211,13 @@ void Chip8::Draw() {
 }
 
 void Chip8::executeOneInstruction() {
+  // Local lambda for invalid opcodes
+  auto invalidOpcode = [](uint16_t opcode) {
+    std::array<char, 64> buffer;
+    sprintf(buffer.data(), "Invalid opcode: 0x%02X", opcode);
+    throw std::runtime_error(buffer.data());
+  };
+
   const uint16_t opcode =
       this->memory.at(this->PC + 1) | (this->memory.at(this->PC) << 8);
 
@@ -340,7 +351,7 @@ void Chip8::executeOneInstruction() {
       break;
 
     default:
-      throw "BQS";
+      invalidOpcode(opcode);
     }
   } break;
 
@@ -362,6 +373,7 @@ void Chip8::executeOneInstruction() {
     this->V.at((opcode & 0x0F00) >> 8) =
         floor((rand() % 0xFF) & (opcode & 0x00FF));
     break;
+
   case 0xD000: {
     const auto xStart = this->V.at((opcode & 0x0F00) >> 8);
     const auto yStart = this->V.at((opcode & 0x00F0) >> 4);
@@ -398,9 +410,8 @@ void Chip8::executeOneInstruction() {
       break;
 
     default:
-      throw "BQS";
+      invalidOpcode(opcode);
     }
-
   } break;
 
   case 0xF000: {
@@ -460,11 +471,14 @@ void Chip8::executeOneInstruction() {
         this->V.at(offset) = this->memory.at(this->I + offset);
       }
       break;
+
+    default:
+      invalidOpcode(opcode);
     }
   } break;
 
   default:
-    throw std::runtime_error("Unknown opcode: " + std::to_string(opcode));
+    invalidOpcode(opcode);
   }
 }
 
@@ -472,24 +486,30 @@ void Chip8::executeOneInstruction() {
   x %= 64;
   y %= 32;
 
-  auto pixel = this->pixels.at((y * 64 + x) * 3);
-
-  return pixel != 0;
+  return this->pixels.at((y * 64) + x);
 }
 
 void Chip8::togglePixel(uint16_t x, uint16_t y) {
   x %= 64;
   y %= 32;
 
-  uint8_t *pixel = &this->pixels.at((y * 64 + x) * 3);
+  // Toggle the pixel boolean
+  auto &pixel = this->pixels.at((y * 64) + x);
+  pixel = !pixel;
 
-  *pixel = ~*pixel;
-  ++pixel;
+  auto pixelData = &this->pixelBuffer.at((y * 64 + x) * 3);
 
-  *pixel = ~*pixel;
-  ++pixel;
-
-  *pixel = ~*pixel;
+  if (pixel) {
+    // "On" pixels are amber
+    pixelData[0] = 0xFF;
+    pixelData[1] = 0xBB;
+    pixelData[2] = 0x00;
+  } else {
+    // "Off" pixels are black
+    pixelData[0] = 0;
+    pixelData[1] = 0;
+    pixelData[2] = 0;
+  }
 }
 
 namespace {

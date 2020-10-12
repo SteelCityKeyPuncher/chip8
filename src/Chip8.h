@@ -47,7 +47,8 @@ private:
   GLuint VAO = -1;
   GLuint VBO = -1;
   GLuint EBO = -1;
-  std::array<uint8_t, 64 * 32 * 3> pixels = {};
+  std::array<bool, 64 * 32> pixels = {};
+  std::array<uint8_t, 64 * 32 * 3> pixelBuffer = {};
 };
 
 #endif // CHIP8_H_INCLUDED

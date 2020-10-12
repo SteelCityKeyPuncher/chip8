@@ -10,7 +10,7 @@ namespace Util {
 std::vector<uint8_t> FileReadBinary(const std::string &path) {
   auto file = std::ifstream(path, std::ios::binary);
   if (!file) {
-    throw std::runtime_error("Could not open the ROM.");
+    throw std::runtime_error("Could not open the file: " + path);
   }
 
   file.seekg(0, std::ios::end);

@@ -1,12 +1,10 @@
 #include <array>
+#include <cmath>
 #include <cstdint>
+#include <cstdlib>
 #include <cstring>
 #include <fstream>
 #include <vector>
-
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
 #include "Chip8.h"
 #include "Util.h"
@@ -23,9 +21,9 @@ constexpr std::array<uint8_t, 80> kInternalFont = {
     0xF0, 0x80, 0xF0, 0xF0, 0x80, 0xF0, 0x80, 0x80};
 
 constexpr std::array<int, 16> kKeyMap = {
-    GLFW_KEY_X, GLFW_KEY_Q, GLFW_KEY_W, GLFW_KEY_E, GLFW_KEY_A,
-    GLFW_KEY_S, GLFW_KEY_D, GLFW_KEY_Y, GLFW_KEY_C, GLFW_KEY_4,
-    GLFW_KEY_R, GLFW_KEY_F, GLFW_KEY_V};
+    GLFW_KEY_X, GLFW_KEY_1, GLFW_KEY_2, GLFW_KEY_3, GLFW_KEY_Q, GLFW_KEY_W,
+    GLFW_KEY_E, GLFW_KEY_A, GLFW_KEY_S, GLFW_KEY_D, GLFW_KEY_Y, GLFW_KEY_C,
+    GLFW_KEY_4, GLFW_KEY_R, GLFW_KEY_F, GLFW_KEY_V};
 
 // Functions
 GLuint compileShader(const std::string &path, GLenum type);

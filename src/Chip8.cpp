@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <ctime>
 #include <fstream>
 #include <limits>
 #include <vector>
@@ -37,7 +38,7 @@ Chip8::Chip8() {
 
   // Seed the random number generator
   // Ideally, the RNG from the STL would be better here
-  srand(time(nullptr));
+  srand(static_cast<unsigned int>(time(nullptr)));
 }
 
 Chip8::~Chip8() {
@@ -228,6 +229,7 @@ void Chip8::executeOneInstruction() {
     switch (opcode) {
     case 0x00E0:
       std::memset(this->pixels.data(), 0, this->pixels.size());
+      std::memset(this->pixelBuffer.data(), 0, this->pixelBuffer.size());
       break;
 
     case 0x00EE:
@@ -342,7 +344,7 @@ void Chip8::executeOneInstruction() {
         this->V.at(0xF) = 1;
       }
 
-      this->V.at((opcode & 0x0F00) >> 8) = diff;
+      this->V.at((opcode & 0x0F00) >> 8) = static_cast<uint8_t>(diff);
     } break;
 
     case 0x000E:
@@ -370,8 +372,7 @@ void Chip8::executeOneInstruction() {
     break;
 
   case 0xC000:
-    this->V.at((opcode & 0x0F00) >> 8) =
-        floor((rand() % 0xFF) & (opcode & 0x00FF));
+    this->V.at((opcode & 0x0F00) >> 8) = static_cast<uint8_t>(rand() & opcode);
     break;
 
   case 0xD000: {
@@ -381,7 +382,7 @@ void Chip8::executeOneInstruction() {
     this->V.at(0xF) = 0;
 
     for (uint8_t yOffset = 0; yOffset < (opcode & 0x000F); yOffset++) {
-      const auto data = this->memory[this->I + yOffset];
+      const auto data = this->memory.at(this->I + yOffset);
 
       for (uint8_t xOffset = 0; xOffset < 8; xOffset++) {
         if ((data & (0x80 >> xOffset)) != 0) {
@@ -518,7 +519,7 @@ GLuint compileShader(const std::string &path, GLenum type) {
   auto shaderData = Util::FileReadBinary(path);
 
   // Add a null terminator because it's a C string
-  shaderData.emplace_back(0);
+  shaderData.push_back(0);
 
   const auto shaderChars = reinterpret_cast<const GLchar *>(shaderData.data());
   const auto shader = glCreateShader(type);

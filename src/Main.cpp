@@ -19,7 +19,7 @@ struct glfwDeleter {
 };
 
 // Local variables
-std::unique_ptr<GLFWwindow, glfwDeleter> window;
+std::unique_ptr<GLFWwindow, glfwDeleter> glfwWindow;
 Chip8 chip8;
 
 // Local functions
@@ -57,7 +57,7 @@ void parseArguments(int argc, char **argv) {
 
       // TODO improve this code
       const auto rate = std::stoul(argv[i]);
-      chip8.SetCpuRate(rate);
+      chip8.SetCpuRate(static_cast<uint16_t>(rate));
     } else {
       if (!romPath.empty()) {
         throw std::runtime_error("Unexpected argument: " +
@@ -90,24 +90,24 @@ void initializeGraphics() {
   auto monitor = glfwGetPrimaryMonitor();
   const auto videoMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 
-  window.reset(glfwCreateWindow(videoMode->width, videoMode->height, "CHIP-8",
-                                monitor, nullptr));
-  if (!window) {
+  glfwWindow.reset(glfwCreateWindow(videoMode->width, videoMode->height,
+                                    "CHIP-8", monitor, nullptr));
+  if (!glfwWindow) {
     throw std::runtime_error("Unable to create GLFW window.");
   }
 
   // Update the framebuffer when the window is resized
   // This is necessary because, even in fullscreen mode, the screen may be
   // resized a few times (at least in X11/Ubuntu)
-  glfwSetWindowSizeCallback(window.get(), glfwWindowSizeCallback);
-  glfwMakeContextCurrent(window.get());
+  glfwSetWindowSizeCallback(glfwWindow.get(), glfwWindowSizeCallback);
+  glfwMakeContextCurrent(glfwWindow.get());
 
   if (!gladLoadGL()) {
     throw std::runtime_error("Unable to initialize glad.");
   }
 
   // Hide the mouse cursor
-  glfwSetInputMode(window.get(), GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+  glfwSetInputMode(glfwWindow.get(), GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
   // Clear the screen to black
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -133,13 +133,13 @@ void runLoop() {
   // Fixed time step rendering logic
   // Run the update logic as fast as possible
   // If enough time has elapsed to actually render, then do so
-  while (!glfwWindowShouldClose(window.get())) {
+  while (!glfwWindowShouldClose(glfwWindow.get())) {
     const auto currentTime = glfwGetTime();
     const auto deltaTime = static_cast<float>(currentTime - lastUpdateTime);
     lastUpdateTime = currentTime;
 
     // Update the CPU
-    chip8.Update(window.get(), deltaTime);
+    chip8.Update(glfwWindow.get(), deltaTime);
 
     // See if we can render in this loop
     if ((currentTime - lastFrameTime) >= kFrameTime) {
@@ -151,7 +151,7 @@ void runLoop() {
       chip8.Draw();
 
       // Finish up window rendering (swap buffers)
-      glfwSwapBuffers(window.get());
+      glfwSwapBuffers(glfwWindow.get());
       glfwPollEvents();
     }
   }

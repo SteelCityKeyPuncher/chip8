@@ -10,10 +10,14 @@ git clone --recurse-submodules https://github.com/SteelCityKeyPuncher/chip8.git
 
 ## Running the Emulator
 
-Run the program by passing the path to a ROM as the first argument.
+Run the program by passing the path to a ROM as the first argument. Run from the main directory because the path to the shaders (in `assets/`) are relative to this directory.
 
-Run from the main directory because the path to the shaders (in `assets/`) are relative to this directory.
+On Windows, it will look something like this.
+```bash
+.\build\Debug\chip8.exe roms\INVADERS
+```
 
+On Linux, it will look something like this.
 ```bash
 ./build/chip8 roms/15PUZZLE
 ```
@@ -55,6 +59,5 @@ This project requires that you have CMake in your path.
 mkdir build
 cd build
 cmake ..
+cmake --build .
 ```
-
-On Linux, simply run `make`. I'm not sure if this runs on Windows yet.

@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
+#include <limits>
 #include <vector>
 
 #include "Chip8.h"
@@ -36,10 +37,21 @@ Chip8::Chip8() {
 }
 
 Chip8::~Chip8() {
-  glDeleteBuffers(1, &this->EBO);
-  glDeleteBuffers(1, &this->VBO);
-  glDeleteVertexArrays(1, &this->VAO);
-  glDeleteProgram(this->shader);
+  if (this->EBO != static_cast<GLuint>(-1)) {
+    glDeleteBuffers(1, &this->EBO);
+  }
+
+  if (this->VBO != static_cast<GLuint>(-1)) {
+    glDeleteBuffers(1, &this->VBO);
+  }
+
+  if (this->VAO != static_cast<GLuint>(-1)) {
+    glDeleteVertexArrays(1, &this->VAO);
+  }
+
+  if (this->shader != static_cast<GLuint>(-1)) {
+    glDeleteProgram(this->shader);
+  }
 }
 
 void Chip8::InitializeGraphics() {
@@ -125,7 +137,6 @@ void Chip8::InitializeGraphics() {
 
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 64, 32, 0, GL_RGB, GL_UNSIGNED_BYTE,
                this->pixels.data());
-  // glGenerateMipmap(GL_TEXTURE_2D);
 }
 
 void Chip8::LoadRom(const std::string &romPath) {
@@ -138,7 +149,29 @@ void Chip8::LoadRom(const std::string &romPath) {
   std::memcpy(&this->memory[0x200], &fileData[0], fileData.size());
 }
 
+void Chip8::SetCpuRate(uint16_t instructionsPerSecond) {
+  this->updateRate = instructionsPerSecond;
+  this->updateTime = 1.f / this->updateRate;
+}
+
 void Chip8::Update(GLFWwindow *window, float deltaTime) {
+  // Close the window if the ESC key is pressed
+  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+    glfwSetWindowShouldClose(window, true);
+  }
+
+  if (glfwGetKey(window, GLFW_KEY_PAGE_UP) == GLFW_PRESS) {
+    if (this->updateRate < std::numeric_limits<uint16_t>::max()) {
+      this->SetCpuRate(this->updateRate + 1);
+    }
+  }
+
+  if (glfwGetKey(window, GLFW_KEY_PAGE_DOWN) == GLFW_PRESS) {
+    if (this->updateRate > 0) {
+      this->SetCpuRate(this->updateRate - 1);
+    }
+  }
+
   for (size_t i = 0; i < 16; i++) {
     this->keys.at(i) = (glfwGetKey(window, kKeyMap[i]) == GLFW_PRESS);
   }
@@ -152,9 +185,12 @@ void Chip8::Update(GLFWwindow *window, float deltaTime) {
     this->delayTimerAccumulator -= 1.f / 60.f;
   }
 
-  // TODO keep the frame rate consistent
-  for (int i = 0; i < 500; i++)
+  // Execute CPU instructions at a constant rate
+  this->updateAccumulator += deltaTime;
+  while (this->updateAccumulator >= 0.f) {
     this->executeOneInstruction();
+    this->updateAccumulator -= this->updateTime;
+  }
 }
 
 void Chip8::Draw() {
@@ -458,8 +494,10 @@ void Chip8::togglePixel(uint16_t x, uint16_t y) {
 
 namespace {
 GLuint compileShader(const std::string &path, GLenum type) {
-  // Load the file, adding a NULL terminator because it's a C string
+  // Load the file
   auto shaderData = Util::FileReadBinary(path);
+
+  // Add a null terminator because it's a C string
   shaderData.emplace_back(0);
 
   const auto shaderChars = reinterpret_cast<const GLchar *>(shaderData.data());

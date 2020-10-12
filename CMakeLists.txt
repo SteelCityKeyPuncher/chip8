@@ -22,7 +22,6 @@ if(MSVC)
     target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX)
 else()
     target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -pedantic -Werror)
-    set_source_files_properties("${SRC_DIR}/Util/StbImage.cpp" PROPERTIES COMPILE_FLAGS -Wno-error)
 endif()
 
 # GLFW
@@ -42,7 +41,3 @@ add_library("glad" "${GLAD_DIR}/src/glad.c")
 target_include_directories("glad" PRIVATE "${GLAD_DIR}/include")
 target_include_directories(${PROJECT_NAME} PRIVATE "${GLAD_DIR}/include")
 target_link_libraries(${PROJECT_NAME} "glad" "${CMAKE_DL_LIBS}")
-
-# glm
-set(GLM_DIR "${THIRD_PARTY_DIR}/glm")
-target_include_directories(${PROJECT_NAME} PRIVATE "${GLM_DIR}")

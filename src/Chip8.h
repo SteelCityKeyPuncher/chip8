@@ -16,6 +16,7 @@ public:
 
   void InitializeGraphics();
   void LoadRom(const std::string &romPath);
+  void SetCpuRate(uint16_t instructionsPerSecond);
   void Update(GLFWwindow *window, float deltaTime);
   void Draw();
 
@@ -36,13 +37,16 @@ private:
   float delayTimerAccumulator = 0.f;
   uint8_t soundTimer = 0;
   // TODO need floating point helper for this one too
+  uint16_t updateRate = 500;
+  float updateTime = 1.f / updateRate;
+  float updateAccumulator = 0.f;
 
   // Graphics stuff
-  GLuint shader;
-  GLuint texture;
-  GLuint VAO;
-  GLuint VBO;
-  GLuint EBO;
+  GLuint shader = -1;
+  GLuint texture = -1;
+  GLuint VAO = -1;
+  GLuint VBO = -1;
+  GLuint EBO = -1;
   std::array<uint8_t, 64 * 32 * 3> pixels = {};
 };
 

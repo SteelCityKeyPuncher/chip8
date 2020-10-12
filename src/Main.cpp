@@ -45,8 +45,31 @@ int main(int argc, char **argv) {
 
 namespace {
 void parseArguments(int argc, char **argv) {
-  if (argc != 2) {
-    throw std::runtime_error("Expected one argument (ROM path).");
+  std::string romPath;
+
+  for (int i = 1; i < argc; i++) {
+    if (std::string(argv[i]) == "-r") {
+      if ((i + 1) == argc) {
+        throw std::runtime_error("Missing argument after -r.");
+      }
+
+      ++i;
+
+      // TODO improve this code
+      const auto rate = std::stoul(argv[i]);
+      chip8.SetCpuRate(rate);
+    } else {
+      if (!romPath.empty()) {
+        throw std::runtime_error("Unexpected argument: " +
+                                 std::string(argv[i]));
+      }
+
+      romPath = argv[i];
+    }
+  }
+
+  if (romPath.empty()) {
+    throw std::runtime_error("Missing ROM path argument.");
   }
 
   chip8.LoadRom(argv[1]);
@@ -86,8 +109,8 @@ void initializeGraphics() {
   // Hide the mouse cursor
   glfwSetInputMode(window.get(), GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
-  // Clear the screen to a dark blue
-  glClearColor(0.0f, 0.0f, 0.25f, 1.0f);
+  // Clear the screen to black
+  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
   // TODO should be configurable
   // 0 = could tear, but swapping buffers doesn't block
@@ -130,11 +153,6 @@ void runLoop() {
       // Finish up window rendering (swap buffers)
       glfwSwapBuffers(window.get());
       glfwPollEvents();
-
-      // Close the window if the ESC key is pressed
-      if (glfwGetKey(window.get(), GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-        glfwSetWindowShouldClose(window.get(), true);
-      }
     }
   }
 }

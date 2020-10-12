@@ -22,6 +22,11 @@ constexpr std::array<uint8_t, 80> kInternalFont = {
     0xF0, 0x80, 0x80, 0x80, 0xF0, 0xE0, 0x90, 0x90, 0x90, 0xE0, 0xF0, 0x80,
     0xF0, 0x80, 0xF0, 0xF0, 0x80, 0xF0, 0x80, 0x80};
 
+constexpr std::array<int, 16> kKeyMap = {
+    GLFW_KEY_X, GLFW_KEY_Q, GLFW_KEY_W, GLFW_KEY_E, GLFW_KEY_A,
+    GLFW_KEY_S, GLFW_KEY_D, GLFW_KEY_Y, GLFW_KEY_C, GLFW_KEY_4,
+    GLFW_KEY_R, GLFW_KEY_F, GLFW_KEY_V};
+
 // Functions
 GLuint compileShader(const std::string &path, GLenum type);
 GLuint linkShader(GLuint vertexShader, GLuint fragmentShader);
@@ -136,22 +141,9 @@ void Chip8::LoadRom(const std::string &romPath) {
 }
 
 void Chip8::Update(GLFWwindow *window, float deltaTime) {
-  this->keys.at(0x0) = (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS);
-  this->keys.at(0x1) = (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS);
-  this->keys.at(0x2) = (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS);
-  this->keys.at(0x3) = (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS);
-  this->keys.at(0x4) = (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS);
-  this->keys.at(0x5) = (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS);
-  this->keys.at(0x6) = (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS);
-  this->keys.at(0x7) = (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS);
-  this->keys.at(0x8) = (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS);
-  this->keys.at(0x9) = (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS);
-  this->keys.at(0xA) = (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS);
-  this->keys.at(0xB) = (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS);
-  this->keys.at(0xC) = (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS);
-  this->keys.at(0xD) = (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS);
-  this->keys.at(0xE) = (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS);
-  this->keys.at(0xF) = (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS);
+  for (size_t i = 0; i < 16; i++) {
+    this->keys.at(i) = (glfwGetKey(window, kKeyMap[i]) == GLFW_PRESS);
+  }
 
   this->delayTimerAccumulator += deltaTime;
   while (this->delayTimerAccumulator >= 0.f) {

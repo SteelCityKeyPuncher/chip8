@@ -9,8 +9,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(THIRD_PARTY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty")
 set(SOURCES
+    "${SRC_DIR}/Chip8.cpp"
     "${SRC_DIR}/Main.cpp"
-    "${SRC_DIR}/Window.cpp"
 )
 
 # Executable definition and properties
